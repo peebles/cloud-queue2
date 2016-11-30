@@ -29,7 +29,7 @@ module.exports = function( config ) {
 	  this.log.warn( 'RabbitMQ connection interrupted:', err );
 	});
 
-	conn.createChannel( (err, ch) => {
+	conn.createConfirmChannel( (err, ch) => {
 	  if ( err ) throw( err );
 	  this.pch = ch;
 	  ch.on( 'error', ( err ) => {
@@ -115,19 +115,21 @@ module.exports = function( config ) {
     }
 
     _enqueue( queue, message, cb ) {
-      try {
-	this.pch.assertQueue( queue, { durable: true } );
-	this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), { persistent: true } );
-	cb();
-      } catch( err ) {
-	cb( err );
-      }
+      this.pch.assertQueue( queue, { durable: true }, ( err ) => {
+	if ( err ) return cb( err );
+	this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), { persistent: true }, (err) => {
+	  if ( err ) return cb( err );
+	  this.pch.waitForConfirms( (err) => {
+	    cb( err );
+	  });
+	});
+      });
     }
 
     _dequeue( queue, cb ) {
       this._try( (cb) => {
-	try {
-	  this.cch.assertQueue( queue, { durable: true } );
+	this.cch.assertQueue( queue, { durable: true }, (err) => {
+	  if ( err ) return cb( err );
 	  let msg = false;
 	  async.until(
 	    () => { return msg !== false; },
@@ -146,9 +148,7 @@ module.exports = function( config ) {
 		msg: JSON.parse( msg.content.toString( 'utf-8' ) )
 	      }]);
 	    });
-	} catch( err ) {
-	  cb( err );
-	}
+	});
       }, cb );
     }
 
