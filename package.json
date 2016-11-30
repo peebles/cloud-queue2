@@ -1,0 +1,37 @@
+{
+  "name": "cloud-queue2",
+  "version": "0.0.1",
+  "description": "Abstraction on top of various cloud queuing systems",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sqs",
+    "azure",
+    "rabitmq",
+    "ironmq",
+    "redis",
+    "rackspace",
+    "kafka"
+  ],
+  "author": "Andrew Peebles",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peebles/cloud-queue2.git"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.4.2",
+    "async": "^2.0.1",
+    "aws-sdk": "^2.5.5",
+    "azure-sb": "^0.10.4",
+    "iron_mq": "git://github.com/iron-io/iron_mq_node#v3",
+    "kafka-queue": "^1.0.4",
+    "racq": "^0.1.3",
+    "redis": "^2.6.2",
+    "retry-unless": "^1.0.0",
+    "shortid": "^2.2.6",
+    "winston": "^2.2.0"
+  }
+}
