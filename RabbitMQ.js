@@ -17,6 +17,7 @@ module.exports = function( config ) {
         maxNumberOfMessages: 1,
       };
       this.options = Object.assign( {}, defaults, config.options );
+      this.assertedQueues = {};
     }
 
     _producer_connect( cb ) {
@@ -82,40 +83,35 @@ module.exports = function( config ) {
             this.log.warn( 'RabbitMQ channel unblocked.' );
           });
 
-	  async.forever(
-            (cb) => {
-              this._dequeue( queue, (err,msgs) => {
-		if ( err ) {
-                  this.log.error( err );
-                  return cb();
-		}
-		else {
-                  async.eachSeries( msgs, (message, cb) => {
-                    let handle = message.handle;
-                    let msg = message.msg;
-                    messageHandler( msg, (err) => {
-                      if ( err ) return cb( err );
-                      this._remove( queue, handle, (err) => {
-			cb( err );
-                      });
-                    });
-                  }, (err) => {
-                    if ( err ) this.log.error( err );
-                    cb();
-                  });
-		}
+	  this.cch.assertQueue( queue, { durable: true }, (err) => {
+	    if ( err ) throw( err );
+	    this.cch.consume( queue, (message) => {
+	      let msg = JSON.parse( message.content.toString( 'utf-8' ) );
+              messageHandler( msg, (err) => {
+		if ( err ) return;
+		this._remove( queue, message, (err) => {
+		  if ( err ) this.log.error( err );
+		});
               });
-            },
-            (err) => {
-              this.log.error( 'not supposed to be here:', err );
-            });
-
+	    }, {noAck: false }, (err) => {
+	      if ( err ) this.log.error( err );
+	    });
+	  });
 	});
       });
     }
 
+    _assertQueue( q, queue, cb ) {
+      if ( this.assertedQueues[ queue ] ) return process.nextTick( cb );
+      q.assertQueue( queue, { durable: true }, ( err ) => {
+	if ( err ) return cb( err );
+	this.assertedQueues[ queue ] = true;
+	cb();
+      });
+    }
+
     _enqueue( queue, message, cb ) {
-      this.pch.assertQueue( queue, { durable: true }, ( err ) => {
+      this._assertQueue( this.pch, queue, ( err ) => {
 	if ( err ) return cb( err );
 	this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), { persistent: true }, (err) => {
 	  if ( err ) return cb( err );
@@ -124,32 +120,6 @@ module.exports = function( config ) {
 	  });
 	});
       });
-    }
-
-    _dequeue( queue, cb ) {
-      this._try( (cb) => {
-	this.cch.assertQueue( queue, { durable: true }, (err) => {
-	  if ( err ) return cb( err );
-	  let msg = false;
-	  async.until(
-	    () => { return msg !== false; },
-	    (cb) => {
-	      this.cch.get( queue, { noAck: false }, ( err, _msg ) => {
-		if ( err ) return cb( err );
-		msg = _msg;
-		if ( msg == false ) return setTimeout( () => { return cb(); }, this.options.waitTimeSeconds * 1000 );
-		else return cb();
-	      });
-	    },
-	    (err) => {
-	      if ( err ) return cb( err );
-	      cb( null, [{
-		handle: msg,
-		msg: JSON.parse( msg.content.toString( 'utf-8' ) )
-	      }]);
-	    });
-	});
-      }, cb );
     }
 
     _remove( queue, handle, cb ) {
