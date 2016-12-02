@@ -20,7 +20,9 @@ module.exports = function( config ) {
       };
 
       this.consumer = {
-	connect: this.consumer_connect.bind(this)
+	connect: this.consumer_connect.bind(this),
+	length: this.consumer_length.bind(this),
+	deleteQueue: this.consumer_deleteQueue.bind(this)
       };
     }
 
@@ -56,6 +58,29 @@ module.exports = function( config ) {
     
     consumer_connect( queue, cb ) {
       this._consumer_connect( queue, cb );
+    }
+
+    consumer_length( queue, cb ) {
+      this._consumer_length( queue, cb );
+    }
+
+    consumer_deleteQueue( queue, cb ) {
+      this._consumer_deleteQueue( queue, cb );
+    }
+
+    _consumer_length( queue, cb ) {
+      // implementation can override if its possible to return the number
+      // of messages pending in a queue
+      process.nextTick( () => {
+	cb( null, 0 );
+      });
+    }
+
+    _consumer_deleteQueue( queue, cb ) {
+      // implementation can override if its possible to delete a queue
+      process.nextTick( () => {
+	cb();
+      });
     }
 
     _producer_connect( cb ) {

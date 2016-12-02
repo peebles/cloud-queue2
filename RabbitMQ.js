@@ -133,6 +133,19 @@ module.exports = function( config ) {
       }, cb );
     }
 
+    _consumer_length( queue, cb ) {
+      this.cch.checkQueue( queue, (err,data) => {
+	if ( err ) return cb( err );
+	if ( data && data.messageCount )
+	  return cb( null, data.messageCount );
+	return cb( null, 0 );
+      });
+    }
+
+    _consumer_deleteQueue( queue, cb ) {
+      this.cch.deleteQueue( queue, cb );
+    }
+
   }
 
   return new RabbitMQ();

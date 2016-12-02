@@ -101,6 +101,24 @@ module.exports = function( config ) {
       }, cb );
     }
 
+    _consumer_length( queue, cb ) {
+      this._try( (cb) => {
+	let q = this.cq.queue( queue );
+	q.info( (err,body) => {
+	  if ( err ) return cb( null, 0 ); // At least right now, this is what ironmq returns if a q does not exist
+	  if ( ! ( body && body.size ) ) return cb( null, 0 );
+	  return cb( null, body.size );
+	});
+      }, cb );
+    }
+
+    _consumer_deleteQueue( queue, cb ) {
+      this._try( (cb) => {
+	let q = this.cq.queue( queue );
+	q.del_queue( cb );
+      }, cb );
+    }
+
   }
 
   return new IronMQ();

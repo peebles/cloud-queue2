@@ -116,6 +116,31 @@ module.exports = function( config ) {
       }, cb );
     }
 
+    _consumer_length( queue, cb ) {
+      this._try( (cb) => {
+	this.cq.createQueue({ QueueName: queue }, ( err, data ) => {
+	  if ( err ) return cb( err );
+	  let url = data.QueueUrl;
+	  this.cq.getQueueAttributes({ QueueUrl: url, AttributeNames: [ 'ApproximateNumberOfMessages' ] }, (err, data) => {
+	    if ( err ) return cb( err );
+	    if ( data && data.Attributes && data.Attributes.ApproximateNumberOfMessages )
+	      return cb( null, data.Attributes.ApproximateNumberOfMessages );
+	    return cb( null, 0 );
+	  });
+	});
+      }, cb );      
+    }
+
+    _consumer_deleteQueue( queue, cb ) {
+      this._try( (cb) => {
+	this.cq.createQueue({ QueueName: queue }, ( err, data ) => {
+	  if ( err ) return cb( err );
+	  let url = data.QueueUrl;
+	  this.cq.deleteQueue({ QueueUrl: url }, cb );
+	});
+      }, cb );      
+    }
+
   }
 
   return new SQS();

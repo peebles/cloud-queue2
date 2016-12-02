@@ -123,6 +123,12 @@ module.exports = function( config ) {
       }, cb );
     }
 
+    _consumer_deleteQueue( queue, cb ) {
+      this._try( (cb) => {
+	this.cq.deleteQueue( queue, cb );
+      }, cb );
+    }
+
   }
 
   return new AzureQ();

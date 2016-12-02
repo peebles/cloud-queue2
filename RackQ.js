@@ -128,6 +128,21 @@ module.exports = function( config ) {
       }, cb );
     }
 
+    _consumer_length( queue, cb ) {
+      this._try( (cb) => {
+	this.cq.getQueueStats( queue, (err,data) => {
+	  // someone who can find access to decent doc, fix this!
+	  cb( null, 0 );
+	});
+      }, cb );
+    }
+
+    _consumer_deleteQueue( queue, cb ) {
+      this._try( (cb) => {
+	this.cq.deleteQueue( queue, cb );
+      }, cb );
+    }
+
   }
 
   return new SQS();

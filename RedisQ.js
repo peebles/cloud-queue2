@@ -114,6 +114,10 @@ module.exports = function( config ) {
       process.nextTick( cb );
     }
 
+    _consumer_length( queue, cb ) {
+      this.cq.llen( queue, cb );
+    }
+    
   }
 
   return new RedisQ();
