@@ -1,6 +1,6 @@
 {
   "name": "cloud-queue2",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Abstraction on top of various cloud queuing systems",
   "main": "index.js",
   "scripts": {

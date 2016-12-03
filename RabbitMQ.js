@@ -122,6 +122,32 @@ module.exports = function( config ) {
       });
     }
 
+    _dequeue( queue, cb ) {
+      this._try( (cb) => {
+	this._assertQueue( this.pch, queue, ( err ) => {
+	  if ( err ) return cb( err );
+	  let msg = false;
+          async.until(
+            () => { return msg !== false; },
+            (cb) => {
+              this.cch.get( queue, { noAck: false }, ( err, _msg ) => {
+                if ( err ) return cb( err );
+                msg = _msg;
+                if ( msg == false ) return setTimeout( () => { return cb(); }, this.options.waitTimeSeconds * 1000 );
+                else return cb();
+              });
+            },
+            (err) => {
+              if ( err ) return cb( err );
+              cb( null, [{
+                handle: msg,
+                msg: JSON.parse( msg.content.toString( 'utf-8' ) )
+              }]);
+            });
+	});
+      }, cb );
+    }
+
     _remove( queue, handle, cb ) {
       this._try( (cb) => {
 	try {

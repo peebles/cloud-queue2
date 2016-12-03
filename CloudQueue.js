@@ -16,13 +16,15 @@ module.exports = function( config ) {
 
       this.producer = {
 	connect: this.producer_connect.bind(this),
-	send: this.producer_send.bind(this)
+	send: this.producer_send.bind(this),
       };
 
       this.consumer = {
 	connect: this.consumer_connect.bind(this),
 	length: this.consumer_length.bind(this),
-	deleteQueue: this.consumer_deleteQueue.bind(this)
+	deleteQueue: this.consumer_deleteQueue.bind(this),
+	dequeue: this.consumer_dequeue.bind(this),
+	remove: this.consumer_remove.bind(this),
       };
     }
 
@@ -68,6 +70,14 @@ module.exports = function( config ) {
       this._consumer_deleteQueue( queue, cb );
     }
 
+    consumer_dequeue( queue, cb ) {
+      this._dequeue( queue, cb );
+    }
+
+    consumer_remove( queue, handle, cb ) {
+      this._remove( queue, handle, cb );
+    }
+
     _consumer_length( queue, cb ) {
       // implementation can override if its possible to return the number
       // of messages pending in a queue
@@ -89,6 +99,14 @@ module.exports = function( config ) {
 
     _consumer_connect( queue, cb ) {
       throw( 'subclasses must override' );
+    }
+
+    _dequeue( queue, cb ) {
+      throw( 'this consumer does not implement dequeue' );
+    }
+
+    _remove( queue, handle, cb ) {
+      throw( 'this consumer does not implement remove' );
     }
 
     _enqueue( queue, message, cb ) {
