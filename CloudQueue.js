@@ -28,6 +28,18 @@ module.exports = function( config ) {
       };
     }
 
+    enqueue( queue, message, cb ) {
+      this.producer_send( queue, message, cb );
+    }
+
+    dequeue( queue, cb ) {
+      this.consumer_dequeue( queue, cb );
+    }
+
+    remove( queue, handle, cb ) {
+      this.consumer_remove( queue, handle, cb );
+    }
+
     // subclasses can override
     _shouldStopTrying( err ) {
       return false;
@@ -36,7 +48,9 @@ module.exports = function( config ) {
     _try( fcn, cb ) {
       retry({ times: config.retry_times || 6,
 	      interval: (retryCount) => {
-		return 50 * Math.pow( 2, retryCount );
+		let ms = 50 * Math.pow( 2, retryCount );
+		this.log.warn( 'retrying in', ms );
+		return ms;
 	      }
       }, (cb) => {
 	fcn( cb );
@@ -47,19 +61,32 @@ module.exports = function( config ) {
     }
 
     producer_connect( cb ) {
-      this._producer_connect( cb );
+      this._try( (cb) => {
+	this._producer_connect( cb );
+      }, cb );
     }
 
     producer_send( queue, message, cb ) {
-      this._try(
-	(cb) => {
-	  this._enqueue( queue, message, cb );
-	},
-	cb );
+      this._try( (cb) => {
+	this._enqueue( queue, message, cb );
+      }, cb );
     }
     
     consumer_connect( queue, cb ) {
-      this._consumer_connect( queue, cb );
+      if ( ! cb ) {
+	// if this is a dequeue model, then we can do retries
+	this._try( (cb) => {
+	  this._consumer_connect( cb );
+	}, queue );
+      }
+      else {
+	// this is a consume model
+	this._try( (rcb) => {
+	  this._consumer_connect( queue, cb, rcb );
+	}, (err) => {
+	  if ( err ) throw( err );
+	});
+      }
     }
 
     consumer_length( queue, cb ) {
@@ -82,7 +109,7 @@ module.exports = function( config ) {
       // implementation can override if its possible to return the number
       // of messages pending in a queue
       process.nextTick( () => {
-	cb( null, 0 );
+	cb( null, 1 );
       });
     }
 

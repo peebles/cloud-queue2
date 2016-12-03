@@ -1,5 +1,5 @@
 'use strict';
-
+let async = require( 'async' );
 module.exports = function( config ) {
 
   let CloudQueue = require( './CloudQueue' )( config );
@@ -30,9 +30,13 @@ module.exports = function( config ) {
       process.nextTick( cb );
     }
 
-    _consumer_connect( queue, messageHandler ) {
+    _consumer_connect( queue, messageHandler, rcb ) {
       let iron_mq = require( 'iron_mq' );
       this.cq = new iron_mq.Client( config.connection );
+
+      // dequeue mode signature
+      if ( rcb ) rcb();
+      if ( ! messageHandler ) return queue();
 
       async.forever(
         (cb) => {

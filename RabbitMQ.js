@@ -23,7 +23,7 @@ module.exports = function( config ) {
     _producer_connect( cb ) {
       this.pch = null;
       require( 'amqplib/callback_api' ).connect( config.connection.url, ( err, conn ) => {
-	if ( err ) throw( err );
+	if ( err ) return cb( err );
 	process.once('SIGINT', conn.close.bind(conn)); // close it if ctrlc
 
 	conn.on( 'error', (err) => {
@@ -54,10 +54,12 @@ module.exports = function( config ) {
       });
     }
 
-    _consumer_connect( queue, messageHandler ) {
+    _consumer_connect( queue, messageHandler, rcb ) {
       this.cch = null;
       require( 'amqplib/callback_api' ).connect( config.connection.url, ( err, conn ) => {
-	if ( err ) throw( err );
+	if ( err && rcb ) return rcb( err );
+	if ( err && !messageHandler ) return queue( err );
+	if ( rcb ) rcb();
 	process.once('SIGINT', conn.close.bind(conn)); // close it if ctrlc
 
 	conn.on( 'error', (err) => {
@@ -83,6 +85,9 @@ module.exports = function( config ) {
             this.log.warn( 'RabbitMQ channel unblocked.' );
           });
 
+	  // dequeue mode signature
+	  if ( ! messageHandler ) return queue();
+	  
 	  this.cch.assertQueue( queue, { durable: true }, (err) => {
 	    if ( err ) throw( err );
 	    this.cch.consume( queue, (message) => {
@@ -124,7 +129,7 @@ module.exports = function( config ) {
 
     _dequeue( queue, cb ) {
       this._try( (cb) => {
-	this._assertQueue( this.pch, queue, ( err ) => {
+	this._assertQueue( this.cch, queue, ( err ) => {
 	  if ( err ) return cb( err );
 	  let msg = false;
           async.until(
@@ -151,10 +156,10 @@ module.exports = function( config ) {
     _remove( queue, handle, cb ) {
       this._try( (cb) => {
 	try {
-	  this.cch.ack( handle );
-	  cb();
+          this.cch.ack( handle );
+          cb();
 	} catch( err ) {
-	  cb( err );
+          cb( err );
 	}
       }, cb );
     }

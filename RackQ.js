@@ -23,17 +23,22 @@ module.exports = function( config ) {
     _producer_connect( cb ) {
       let Q = require('racq');
       this.pq = new Q( config.connection );
-      this.pq.authenticate( (err) => {
+      this.pq.authenticate( config.connection.userName, config.connection.apiKey, (err) => {
 	if ( err ) this.log.error( "RackQ: Failed to authenticate:", err );
 	cb( err );
       });
     }
 
-    _consumer_connect( cb ) {
+    _consumer_connect( cb, messageHandler, rcb ) {
       let Q = require('racq');
       this.cq = new Q( config.connection );
-      this.cq.authenticate( (err) => {
-	if ( err ) this.log.error( "RackQ: Failed to authenticate:", err );
+      this.cq.authenticate( config.connection.userName, config.connection.apiKey, (err) => {
+	if ( err && rcb ) return rcb( err );
+        if ( err && !messageHandler ) return queue( err );
+        if ( rcb ) rcb();
+
+	// dequeue mode signature
+	if ( ! messageHandler ) return queue();
 
 	async.forever(
           (cb) => {
@@ -145,5 +150,5 @@ module.exports = function( config ) {
 
   }
 
-  return new SQS();
+  return new RacQ();
 }

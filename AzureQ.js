@@ -36,11 +36,15 @@ module.exports = function( config ) {
       }
     }
 
-    _consumer_connect( queue, messageHandler ) {
+    _consumer_connect( queue, messageHandler, rcb ) {
       try {
         this.cq = require( 'azure-sb' ).createServiceBusService(
           config.connection.connectionString
         );
+
+	// dequeue mode signature
+	if ( rcb ) rcb();
+	if ( ! messageHandler ) return queue();
 
 	async.forever(
           (cb) => {
@@ -71,7 +75,8 @@ module.exports = function( config ) {
           });
 	
       } catch( err ) {
-	this.log.error( err );
+	if ( rcb ) return rcb( err );
+	if ( !messageHandler ) return queue( err );
       }
     }
     

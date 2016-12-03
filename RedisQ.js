@@ -30,14 +30,19 @@ module.exports = function( config ) {
       this.pq.on( 'ready', cb );      
     }
 
-    _consumer_connect( queue, messageHandler ) {
+    _consumer_connect( queue, messageHandler, rcb ) {
       this.cq = require( 'redis' ).createClient( config.connection );
+      if ( rcb ) rcb();
       this.cq.on( 'error', (err) => {
 	// this prevents process from exiting and redis
         // will try to reconnect...
 	this.log.warn( err );
       });
       this.cq.on( 'ready', () => {
+
+	// dequeue mode signature
+	if ( ! messageHandler ) return queue();
+
 	async.forever(
 	  (cb) => {
 	    this._dequeue( queue, (err,msgs) => {

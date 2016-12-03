@@ -32,10 +32,14 @@ module.exports = function( config ) {
       process.nextTick( cb );
     }
 
-    _consumer_connect( queue, messageHandler ) {
+    _consumer_connect( queue, messageHandler, rcb ) {
       let AWS = require( 'aws-sdk' );
       AWS.config.update( config.connection );
       this.cq = new AWS.SQS();
+
+      // dequeue mode signature
+      if ( rcb ) rcb();
+      if ( ! messageHandler ) return queue();
 
       async.forever(
         (cb) => {
