@@ -147,9 +147,11 @@ module.exports = function( config ) {
       this._try( (cb) => {
 	try {
           this.cch.ack( handle );
-          cb();
+          process.nextTick( cb );
 	} catch( err ) {
-          cb( err );
+	  process.nextTick( function() {
+            cb( err );
+	  });
 	}
       }, cb );
     }
@@ -164,7 +166,7 @@ module.exports = function( config ) {
     }
 
     _consumer_deleteQueue( queue, cb ) {
-      this.cch.deleteQueue( queue, cb );
+      this.cch.deleteQueue( queue, {}, cb );
     }
 
   }
