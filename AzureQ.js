@@ -94,30 +94,18 @@ module.exports = function( config ) {
       this._try( (cb) => {
 	this.cq.createQueueIfNotExists( queue, this.options, (err) => {
 	  if ( err ) return cb( err );
-	  let gotit = false;
-	  let msg = null;
-	  async.until( 
-            () => { return gotit; },
-	    (cb) => {
-	      this.cq.receiveQueueMessage( queue, { isPeekLock: true }, (err, _msg) => {
-		if ( err && err == 'No messages to receive' ) {
-		  return setTimeout( () => {
-		    cb();
-		  }, this.options.waitTimeSeconds * 1000 );
-		}
-		if ( err ) return cb( new Error( err ) );
-		gotit = true;
-		msg = _msg;
-		cb();
-	      });
-	    },
-	    (err) => {
-	      if ( err ) return cb( err );
-	      cb([{
-		handle: msg,
-		msg: JSON.parse( msg.body ),
-	      }]);
-	    });
+	  this.cq.receiveQueueMessage( queue, { isPeekLock: true }, (err, msg) => {
+	    if ( err && err == 'No messages to receive' ) {
+	      return setTimeout( () => {
+		cb( null, [] );
+	      }, this.options.waitTimeSeconds * 1000 );
+	    }
+	    if ( err ) return cb( new Error( err ) );
+	    cb( null, [{
+	      handle: msg,
+	      msg: JSON.parse( msg.body ),
+	    }]);
+	  });
 	});
       }, cb );
     }

@@ -89,40 +89,25 @@ module.exports = function( config ) {
       this._try( (cb) => {
 	this._ensureQueue( this.cq, queue, (err) => {
 	  if ( err ) return cb( err );
-
-	  let messages = [];
-	  async.until(
-	    () => { return messages.length; },
-	    (cb) => {
-	      let opts = {
-		limit: this.options.maxNumberOfMessages,
-		ttl: this.options.visibilityTimeout,
-		grace: this.options.grace || this.options.visibilityTimeout,
-	      };
-
-
-
-	      this.cq.claimMessages( queue, opts, (err, _messages) => {
-		if ( err ) return cb( err );
-		messages = _messages;
-		if ( ! (messages && messages.length) ) {
-		  return setTimeout( () => {
-		    cb();
-		  }, this.options.waitTimeSeconds * 1000 );
-		}
-		cb();
-	      });
-	    },
-	    (err) => {
-	      if ( err ) return cb( err );
-	      cb( null, messages.map( (m) => {
-		return {
-		  handle: m,
-		  msg: m.body
-		};
-	      }));
+	  let opts = {
+	    limit: this.options.maxNumberOfMessages,
+	    ttl: this.options.visibilityTimeout,
+	    grace: this.options.grace || this.options.visibilityTimeout,
+	  };
+	  this.cq.claimMessages( queue, opts, (err, messages) => {
+	    if ( err ) return cb( err );
+	    if ( ! (messages && messages.length) ) {
+	      return setTimeout( () => {
+		cb( null, [] );
+	      }, this.options.waitTimeSeconds * 1000 );
 	    }
-	  );
+	    cb( null, messages.map( (m) => {
+	      return {
+		handle: m,
+		msg: m.body
+	      };
+	    }));
+	  });
 	});
       }, cb );
     }

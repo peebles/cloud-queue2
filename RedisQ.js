@@ -83,35 +83,25 @@ module.exports = function( config ) {
     }
 
     _dequeue( queue, cb ) {
-      let msg = null;
-      async.until(
-        () => { return msg != null; },
-        ( cb ) => {
-          this.cq.rpop( queue, ( err, uuid ) => {
+      this.cq.rpop( queue, ( err, uuid ) => {
+        if ( err ) return cb( err );
+        if ( ! uuid ) {
+          setTimeout( () => { cb( null, [] ); }, this.options.waitTimeSeconds * 1000 );
+        }
+        else {
+          this.cq.get( uuid, ( err, msg ) => {
             if ( err ) return cb( err );
-            if ( ! uuid ) {
-              setTimeout( () => { cb(); }, this.options.waitTimeSeconds * 1000 );
-            }
-            else {
-              this.cq.get( uuid, ( err, _msg ) => {
-                if ( err ) return cb( err );
-                if ( ! _msg ) return cb( new Error( 'redis: could not find uuid: ' + uuid ) );
-                this.cq.del( uuid, ( err ) => {
-                  if ( err ) return cb( err );
-                  msg = _msg;
-                  cb();
-                });
-              });
-            }
-          });
-        },
-        ( err ) => {
-          if ( err ) return cb( err );
-          cb( null, [{
-            handle: null,
-            msg: JSON.parse( msg )
-          }]);
-        });
+            if ( ! msg ) return cb( new Error( 'redis: could not find uuid: ' + uuid ) );
+            this.cq.del( uuid, ( err ) => {
+              if ( err ) return cb( err );
+              cb( null, [{
+		handle: null,
+		msg: JSON.parse( msg )
+              }]);
+	    });
+	  });
+	}
+      });
     }
 
     _remove( queue, handle, cb ) {
