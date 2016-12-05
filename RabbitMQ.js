@@ -166,7 +166,15 @@ module.exports = function( config ) {
     }
 
     _consumer_deleteQueue( queue, cb ) {
-      this.cch.deleteQueue( queue, {}, cb );
+      this.cch.checkQueue( queue, ( err, ok ) => {
+	if ( err ) return cb( err );
+	if ( ! (ok && ok.queue ) ) return cb();
+	this.cch.deleteQueue( queue, {}, (err) => {
+	  if ( err ) return cb( err );
+	  delete this.assertedQueues[ queue ];
+	  cb();
+	});
+      });
     }
 
   }
