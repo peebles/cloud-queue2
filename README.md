@@ -37,7 +37,7 @@ if you are running multiple instances of a consumer and all instances shared the
 with the same keyField will be handled by the same consumer instance every time.  For these reasons, Kafka
 is a great choice for IoT systems.
 
-## Usage
+## Usage - Push Model (consumer)
 
 ```javascript
 // PRODUCER (enqueue)
@@ -54,6 +54,47 @@ let q = require( 'cloud-queue' )( config );
 q.consumer.connect( 'myQueueName', function( message, cb ) {
   console.log( JSON.stringify( message ) );
   cb();  // cb() will delete the message from the queue, cb(err) will not.
+});
+```
+
+## Usage - Pull Model (dequeue)
+
+```javascript
+// PRODUCER (enqueue)
+let q = require( 'cloud-queue' )( config );
+q.producer.connect( function( err ) {
+  if ( err ) exit( err );
+  q.producer.send( 'myQueueName', { my: "message" }, function( err ) {
+    // ...
+  });
+});
+
+// CONSUMER (dequeue)
+let q = require( 'cloud-queue' )( config );
+q.consumer.connect( function( err ) {
+  if ( err ) exit( err );
+  async.forever( function( cb ) {
+    q.dequeue( 'myQueueName', function( err, messages ) {
+      if ( err ) return cb( err );
+      if ( ! ( messages && messages[0] ) ) {
+        console.log( 'no messages available' );
+        return cb();
+      }
+      else {
+        console.log( 'dequeued', messages.length, 'messages' );
+      }
+      async.eachSeries( messages, function( message, cb ) {
+        console.log( JSON.stringify( message.msg ) );
+        // do some work ,,,
+        q.remove( 'myQueueName', message.handle, function( err ) {
+          cb( err );
+        });
+      }, cb );
+    });
+  }, function( err ) {
+    console.log( err );
+    exit( err );
+  });
 });
 ```
 
@@ -80,7 +121,7 @@ The class names supported as of this writing are; `SQS`, `IronMQ`, `RabbitMQ`, `
 The `connection` object you pass depends on the class you choose.  See "config-example.json" for
 how the configuration should look for each class.
 
-## Consuming
+## Consuming 
 
 As you can see from the api, to consume messages you pass a message handler function which
 will get called whenever there is a new message.  This handler is passed a callback which you will
@@ -111,6 +152,21 @@ Q.consumer.connect( table, function( message, cb ) {
 
 Nice and simple.  Will keep your message handling at or below 5 messages per second to match your
 table's write capacity.
+
+## Consuming - the "pull" model
+
+Sometimes you just gotta pull.  In this use model, you call the consumer "connect" with no queue name and just
+a callback function which is called when the connection has been established.  From then on you must explicitly
+"pull" from the queue by calling dequeue().  The dequeue() function will return a list of message items, each
+looking like
+
+```javascript
+{ msg: QUEUE-MESSAGE,
+  handle: OPAQUE-MESSAGE-HANDLE }
+```
+
+Deal with the message as you see fit, then call remove() with the queue name and handle to delete the
+message from the queue.
 
 ## Testing
 
