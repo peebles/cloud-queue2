@@ -74,7 +74,7 @@ let q = require( 'cloud-queue' )( config );
 q.consumer.connect( function( err ) {
   if ( err ) exit( err );
   async.forever( function( cb ) {
-    q.dequeue( 'myQueueName', function( err, messages ) {
+    q.consumer.dequeue( 'myQueueName', function( err, messages ) {
       if ( err ) return cb( err );
       if ( ! ( messages && messages[0] ) ) {
         console.log( 'no messages available' );
@@ -86,7 +86,7 @@ q.consumer.connect( function( err ) {
       async.eachSeries( messages, function( message, cb ) {
         console.log( JSON.stringify( message.msg ) );
         // do some work ,,,
-        q.remove( 'myQueueName', message.handle, function( err ) {
+        q.consumer.remove( 'myQueueName', message.handle, function( err ) {
           cb( err );
         });
       }, cb );
