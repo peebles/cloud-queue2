@@ -85,6 +85,10 @@ module.exports = function( config ) {
             this.log.warn( 'RabbitMQ channel unblocked.' );
           });
 
+	  // set prefetch ( QoS ) http://www.squaremobius.net/amqp.node/channel_api.html#channel_prefetch
+	  if ( config.options && config.options.qos )
+	    this.cch.prefetch( config.options.qos.count, config.options.qos.global );
+
 	  // dequeue mode signature
 	  if ( ! messageHandler ) return queue();
 	  
