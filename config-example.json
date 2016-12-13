@@ -22,6 +22,10 @@
     "class": "RabbitMQ",
     "connection": {
       "url": "amqp://admin:secret@rabbitmq"
+    },
+    "options": {
+      "producerConfirm": true,
+      "expireMessagesInMS": 259200000
     }
   },
   "AzureQ": {

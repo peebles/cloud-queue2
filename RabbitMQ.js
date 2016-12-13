@@ -15,6 +15,8 @@ module.exports = function( config ) {
 	visibilityTimeout: 30,
         waitTimeSeconds: 5,
         maxNumberOfMessages: 1,
+	producerConfirm: true,
+	expireMessagesInMS: 259200000,  // default is 3 days
       };
       this.options = Object.assign( {}, defaults, config.options );
       this.assertedQueues = {};
@@ -30,7 +32,11 @@ module.exports = function( config ) {
 	  this.log.warn( 'RabbitMQ connection interrupted:', err );
 	});
 
-	conn.createConfirmChannel( (err, ch) => {
+	let fcn = conn.createConfirmChannel;
+	if ( this.options.producerConfirm == false )
+	  fcn = conn.createChannel;
+
+	fcn( (err, ch) => {
 	  if ( err ) throw( err );
 	  this.pch = ch;
 	  ch.on( 'error', ( err ) => {
@@ -122,12 +128,17 @@ module.exports = function( config ) {
     _enqueue( queue, message, cb ) {
       this._assertQueue( this.pch, queue, ( err ) => {
 	if ( err ) return cb( err );
-	this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), { persistent: true }, (err) => {
-	  if ( err ) return cb( err );
-	  this.pch.waitForConfirms( (err) => {
-	    cb( err );
-	  });
-	});
+	let opts = {
+	  persistent: true,
+	  expiration: this.options.expireMessagesInMS,
+	};
+	if ( this.options.producerConfirm ) {
+	  this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), opts, cb );
+	}
+	else {
+	  this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), opts );
+	  process.nextTick( cb );
+	}
       });
     }
 
