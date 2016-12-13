@@ -32,31 +32,52 @@ module.exports = function( config ) {
 	  this.log.warn( 'RabbitMQ connection interrupted:', err );
 	});
 
-	let fcn = conn.createConfirmChannel;
-	if ( this.options.producerConfirm == false )
-	  fcn = conn.createChannel;
-
-	fcn( (err, ch) => {
-	  if ( err ) throw( err );
-	  this.pch = ch;
-	  ch.on( 'error', ( err ) => {
-            this.log.error( 'RabbitMQ channel error:', err.message );
-            this.pch = null;
-          });
-          ch.on( 'close', () => {
-            this.log.warn( 'RabbitMQ channel closed, exiting.' );
-            process.exit(1);
-          });
-          ch.on( 'blocked', ( reason ) => {
-            this.log.warn( 'RabbitMQ channel blocked because:', reason );
-          });
-
-          ch.on( 'unblocked', () => {
-            this.log.warn( 'RabbitMQ channel unblocked.' );
-          });
-
-	  cb();
-	});
+	if ( this.options.producerConfirm ) {
+	  conn.createConfirmChannel( (err, ch) => {
+	    if ( err ) throw( err );
+	    this.pch = ch;
+	    ch.on( 'error', ( err ) => {
+              this.log.error( 'RabbitMQ channel error:', err.message );
+              this.pch = null;
+            });
+            ch.on( 'close', () => {
+              this.log.warn( 'RabbitMQ channel closed, exiting.' );
+              process.exit(1);
+            });
+            ch.on( 'blocked', ( reason ) => {
+              this.log.warn( 'RabbitMQ channel blocked because:', reason );
+            });
+	    
+            ch.on( 'unblocked', () => {
+              this.log.warn( 'RabbitMQ channel unblocked.' );
+            });
+	    
+	    cb();
+	  });
+	}
+	else {
+	  conn.createChannel( (err, ch) => {
+	    if ( err ) throw( err );
+	    this.pch = ch;
+	    ch.on( 'error', ( err ) => {
+              this.log.error( 'RabbitMQ channel error:', err.message );
+              this.pch = null;
+            });
+            ch.on( 'close', () => {
+              this.log.warn( 'RabbitMQ channel closed, exiting.' );
+              process.exit(1);
+            });
+            ch.on( 'blocked', ( reason ) => {
+              this.log.warn( 'RabbitMQ channel blocked because:', reason );
+            });
+	    
+            ch.on( 'unblocked', () => {
+              this.log.warn( 'RabbitMQ channel unblocked.' );
+            });
+	    
+	    cb();
+	  });
+	}
       });
     }
 
