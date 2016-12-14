@@ -26,7 +26,8 @@
     "options": {
       "producerConfirm": true,
       "messageTtl": 259200000,
-      "expires": 604800000
+      "expires": 604800000,
+      "qos": { "count": 1000, "global": false }
     }
   },
   "AzureQ": {

@@ -181,7 +181,8 @@ message from the queue.
     "options": {
       "producerConfirm": true,
       "messageTtl": 259200000,
-      "expires": 604800000
+      "expires": 604800000,
+      "qos": { "count": 100, "global": false }
     }
   }
 ```
@@ -190,7 +191,9 @@ message from the queue.
 enqueuing a message.  If set to false, it is more of a fire-and-forget model, but total throughput may be much faster.
 `messageTtl` is the number of milliseconds an enqueued message should live before being deleted by rabbitmq.  The
 default is 3 days.  `expires` is the number of milliseconds of disuse of a queue before it is deleted by rabbitmq.
-The default is 7 days.
+The default is 7 days.  `qos` is used when consuming messages in "push" mode; consumer.connect() with a message handler.
+`qos.count` is the number of messages alowed to be outstanding without being deleted.  `qos.global` when false means
+that `qos.count` is per client, not global and is probably what you want.
 
 ## Testing
 
