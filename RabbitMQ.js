@@ -12,11 +12,9 @@ module.exports = function( config ) {
       super();
 
       let defaults = {
-	visibilityTimeout: 30,
-        waitTimeSeconds: 5,
-        maxNumberOfMessages: 1,
 	producerConfirm: true,
-	expireMessagesInMS: 259200000,  // default is 3 days
+	messageTtl: 259200000,  // default is 3 days
+	expires: 604800000, // unused queues delete after 7 days
       };
       this.options = Object.assign( {}, defaults, config.options );
       this.assertedQueues = {};
@@ -119,7 +117,7 @@ module.exports = function( config ) {
 	  // dequeue mode signature
 	  if ( ! messageHandler ) return queue();
 	  
-	  this.cch.assertQueue( queue, { durable: true }, (err) => {
+	  this._assertQueue( this.cch, queue, (err) => {
 	    if ( err ) throw( err );
 	    this.cch.consume( queue, (message) => {
 	      let msg = JSON.parse( message.content.toString( 'utf-8' ) );
@@ -139,7 +137,7 @@ module.exports = function( config ) {
 
     _assertQueue( q, queue, cb ) {
       if ( this.assertedQueues[ queue ] ) return process.nextTick( cb );
-      q.assertQueue( queue, { durable: true }, ( err ) => {
+      q.assertQueue( queue, { durable: true, messageTtl: this.options.messageTtl, expires: this.options.expires }, ( err ) => {
 	if ( err ) return cb( err );
 	this.assertedQueues[ queue ] = true;
 	cb();
@@ -151,7 +149,6 @@ module.exports = function( config ) {
 	if ( err ) return cb( err );
 	let opts = {
 	  persistent: true,
-	  expiration: this.options.expireMessagesInMS,
 	};
 	if ( this.options.producerConfirm ) {
 	  this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), opts, cb );

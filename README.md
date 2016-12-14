@@ -168,6 +168,30 @@ looking like
 Deal with the message as you see fit, then call remove() with the queue name and handle to delete the
 message from the queue.
 
+## Implementation Options
+
+### RabbitMQ
+
+```javascript
+  {
+    "class": "RabbitMQ",
+    "connection": {
+      "url": "amqp://admin:secret@rabbitmq"
+    },
+    "options": {
+      "producerConfirm": true,
+      "messageTtl": 259200000,
+      "expires": 604800000
+    }
+  }
+```
+
+`producerConfirm` indicates whether producer.send waits for a confirmation from rabbitmq (true, default) when
+enqueuing a message.  If set to false, it is more of a fire-and-forget model, but total throughput may be much faster.
+`messageTtl` is the number of milliseconds an enqueued message should live before being deleted by rabbitmq.  The
+default is 3 days.  `expires` is the number of milliseconds of disuse of a queue before it is deleted by rabbitmq.
+The default is 7 days.
+
 ## Testing
 
 You can do some testing here.  You can fire up a test environment on your development machine by

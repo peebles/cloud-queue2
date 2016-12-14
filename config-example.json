@@ -25,7 +25,8 @@
     },
     "options": {
       "producerConfirm": true,
-      "expireMessagesInMS": 259200000
+      "messageTtl": 259200000,
+      "expires": 604800000
     }
   },
   "AzureQ": {

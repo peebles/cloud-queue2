@@ -22,7 +22,8 @@ rabbit-data:
   command: /bin/true
 
 rabbitmq:
-  image: rabbitmq
+  build: .
+  dockerfile: Dockerfile.rabbitmq
   container_name: rabbitmq
   volumes_from:
     - rabbit-data
