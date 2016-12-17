@@ -82,6 +82,8 @@ module.exports = function( config ) {
           wait: this.options.waitTimeSeconds,
 	};
 	q.reserve( opts, function( err, _message ) {
+	  if ( err && err.message == 'Queue not found' )
+	    return setTimeout( function() { cb( null, [] ); }, 1000 );
 	  if ( err ) return cb( err );
           if ( ! _message ) return cb( null, [] );
           var messages = _message;
