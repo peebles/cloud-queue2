@@ -13,8 +13,6 @@ module.exports = function( config ) {
 
       let defaults = {
 	producerConfirm: true,
-	messageTtl: 259200000,  // default is 3 days
-	expires: 604800000, // unused queues delete after 7 days
       };
       this.options = Object.assign( {}, defaults, config.options );
       this.assertedQueues = {};
@@ -137,7 +135,14 @@ module.exports = function( config ) {
 
     _assertQueue( q, queue, cb ) {
       if ( this.assertedQueues[ queue ] ) return process.nextTick( cb );
-      q.assertQueue( queue, { durable: true, messageTtl: this.options.messageTtl, expires: this.options.expires }, ( err ) => {
+      let opts = {
+	durable: true
+      };
+      [ 'messageTtl', 'expires' ].forEach( (param) => {
+	if ( config.options[ param ] != undefined )
+	  opts[ param ] = config.options.param;
+      });
+      q.assertQueue( queue, opts, ( err ) => {
 	if ( err ) return cb( err );
 	this.assertedQueues[ queue ] = true;
 	cb();
