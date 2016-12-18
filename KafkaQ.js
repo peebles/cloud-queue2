@@ -10,10 +10,11 @@ module.exports = function( config ) {
 
     constructor() {
       super();
+      this.options = Object.assign( {}, config.connection, config.options );
     }
 
     _producer_connect( cb ) {
-      this.pq = require( 'kafka-queue' )( config.connection );
+      this.pq = require( 'kafka-queue' )( this.options );
       this.pq.producer.connect( cb );
     }
 
@@ -21,7 +22,7 @@ module.exports = function( config ) {
       // dequeue mode signature
       if ( ! messageHandler ) throw( new Error( 'Kafka must have a queue and messageHandler on consumer.connect()!' ) );
 
-      this.cq = require( 'kafka-queue' )( config.connection );
+      this.cq = require( 'kafka-queue' )( this.options );
       this.cq.consumer.connect( queue, (message, cb) => {
 	let handle = message.handle;
 	let msg = message.msg;
