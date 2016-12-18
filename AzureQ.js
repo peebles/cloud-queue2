@@ -12,9 +12,7 @@ module.exports = function( config ) {
       super();
 
       let defaults = {
-	visibilityTimeout: 30,
         waitTimeSeconds: 5,
-        maxNumberOfMessages: 1,
       };
       this.options = Object.assign( {}, defaults, config.options );
     }

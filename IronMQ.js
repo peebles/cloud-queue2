@@ -10,11 +10,9 @@ module.exports = function( config ) {
       super();
 
       let defaults = {
-	readDelay: 1,
         visibilityTimeout: 30,
         waitTimeSeconds: 5,
         maxNumberOfMessages: 1,
-        attributes: [ 'All' ],
       };
 
       this.options = Object.assign( {}, defaults, config.options );

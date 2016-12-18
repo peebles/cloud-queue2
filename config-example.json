@@ -5,6 +5,11 @@
       "accessKeyId": "xxxxxxxxxxxxx",
       "secretAccessKey": "yyyyyyyyyyyyyyyyyyyyyyyyyy",
       "region": "us-west-2"
+    },
+    "options": {
+      "visibilityTimeout": 30,
+      "waitTimeSeconds": 5,
+      "maxNumberOfMessages": 10
     }
   },
   "IronMQ": {
@@ -15,6 +20,8 @@
       "project_id": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     },
     "options": {
+      "visibilityTimeout": 30,
+      "waitTimeSeconds": 5,
       "maxNumberOfMessages": 10
     }
   },
@@ -34,6 +41,9 @@
     "class": "AzureQ",
     "connection": {
       "connectionString": "Endpoint=sb://XXXX.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=yyyyyyyyyyyyyyyyyyy"
+    },
+    "options": {
+      "waitTimeSeconds": 5
     }
   },
   "RackQ": {
@@ -42,6 +52,11 @@
       "userName": "<my Rackspace user name>",
       "apiKey": "<my Rackspace apiKey>",
       "region": "dfw"
+    },
+    "options": {
+      "visibilityTimeout": 30,
+      "waitTimeSeconds": 5,
+      "maxNumberOfMessages": 10
     }
   },
   "RedisQ": {
@@ -50,12 +65,17 @@
       "port": 6379,
       "host": "redis",
       "options": {}
+    },
+    "options": {
+      "waitTimeSeconds": 5
     }
   },
   "KafkaQ": {
     "class": "KafkaQ",
     "connection": {
       "connectionString": "192.168.99.100:9092",
+    },
+    "options": {
       "keyField": "deviceId",
       "groupId": "kafka-test-group"
     }
