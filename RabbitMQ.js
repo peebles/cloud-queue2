@@ -139,7 +139,7 @@ module.exports = function( config ) {
 	durable: true
       };
       [ 'messageTtl', 'expires' ].forEach( (param) => {
-	if ( config.options[ param ] != undefined )
+	if ( config.options && ( config.options[ param ] != undefined ) )
 	  opts[ param ] = config.options.param;
       });
       q.assertQueue( queue, opts, ( err ) => {
@@ -159,8 +159,10 @@ module.exports = function( config ) {
 	  this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), opts, cb );
 	}
 	else {
-	  this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), opts );
-	  process.nextTick( cb );
+	  let sent = this.pch.sendToQueue( queue, new Buffer( JSON.stringify( message ) ), opts );
+	  if ( sent === true ) return process.nextTick( cb );
+	  // honor backpressure
+	  this.pch.once( 'drain', cb );
 	}
       });
     }
