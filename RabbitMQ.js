@@ -142,7 +142,6 @@ module.exports = function( config ) {
 	if ( config.options && ( config.options[ param ] != undefined ) )
 	  opts[ param ] = config.options[ param ];
       });
-      console.log( 'using:', opts );
       q.assertQueue( queue, opts, ( err ) => {
 	if ( err ) return cb( err );
 	this.assertedQueues[ queue ] = true;
