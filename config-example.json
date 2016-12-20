@@ -73,7 +73,7 @@
   "KafkaQ": {
     "class": "KafkaQ",
     "connection": {
-      "connectionString": "192.168.99.100:9092",
+      "connectionString": "192.168.99.100:9092"
     },
     "options": {
       "keyField": "deviceId",
