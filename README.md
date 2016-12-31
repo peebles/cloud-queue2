@@ -204,3 +204,16 @@ You can add kafka to the mix by running "sh ./launch-kafka.sh" and by editing yo
 point the connectionString to the ip address of the machine running kafka ($DOCKER_HOST).
 
 The other queuer services require account credentials.
+
+### Testing Hints
+
+#### RabbitMQ
+
+If you use the Dockerfile.rabbitmq here to deploy a rabbitmq instance, then you can:
+
+```bash
+docker exec -it rabbitmq ./rabbitmqadmin --username=admin --password=secret list queues
+```
+
+See [this link](https://www.rabbitmq.com/management-cli.html) for details.
+
