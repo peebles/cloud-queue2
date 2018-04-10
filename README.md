@@ -182,6 +182,7 @@ message from the queue.
       "producerConfirm": true,
       "messageTtl": 259200000,
       "expires": 604800000,
+	  "autoDelete": true,
       "qos": { "count": 100, "global": false }
     }
   }
@@ -194,6 +195,9 @@ default is 3 days.  `expires` is the number of milliseconds of disuse of a queue
 The default is 7 days.  `qos` is used when consuming messages in "push" mode; consumer.connect() with a message handler.
 `qos.count` is the number of messages alowed to be outstanding without being deleted.  `qos.global` when false means
 that `qos.count` is per client, not global and is probably what you want.
+
+`autoDelete` is a different way of managing queue deletion.  It is set to false by default.  If set to true, queues
+will be deleted when the number of consumers drops to zero.
 
 ## Testing
 

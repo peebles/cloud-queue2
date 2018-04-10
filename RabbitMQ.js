@@ -138,7 +138,7 @@ module.exports = function( config ) {
       let opts = {
 	durable: true
       };
-      [ 'messageTtl', 'expires' ].forEach( (param) => {
+      [ 'messageTtl', 'expires', 'autoDelete' ].forEach( (param) => {
 	if ( config.options && ( config.options[ param ] != undefined ) )
 	  opts[ param ] = config.options[ param ];
       });
