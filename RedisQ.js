@@ -16,6 +16,8 @@ module.exports = function( config ) {
         waitTimeSeconds: 5,
       };
       this.options = Object.assign( {}, defaults, config.options );
+      this.pReadyCalled = false;
+      this.cReadyCalled = false;
     }
 
     _producer_connect( cb ) {
@@ -25,7 +27,14 @@ module.exports = function( config ) {
         // will try to reconnect...
 	this.log.warn( err );
       });
-      this.pq.on( 'ready', cb );      
+      this.pq.on( 'ready', () => {
+	if ( this.pReadyCalled ) {
+	  this.log.warn( 'producer on-ready called again!' );
+	  return;
+	}
+	this.pReadyCalled = true;
+	cb();
+      });
     }
 
     _consumer_connect( queue, messageHandler, rcb ) {
@@ -37,6 +46,12 @@ module.exports = function( config ) {
 	this.log.warn( err );
       });
       this.cq.on( 'ready', () => {
+
+	if ( this.cReadyCalled ) {
+	  this.log.warn( 'consumer on-ready called again!' );
+	  return;
+	}
+	this.cReadyCalled = true;
 
 	// dequeue mode signature
 	if ( ! messageHandler ) return queue();
