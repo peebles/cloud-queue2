@@ -20,12 +20,20 @@ module.exports = function( config ) {
       this.cReadyCalled = false;
     }
 
+    // Over ride the super class try() method, since Redis already takes care of retrying
+    _try( fcn, cb ) {
+      return fcn( cb );
+    }
+
     _producer_connect( cb ) {
       this.pq = require( 'redis' ).createClient( config.connection );
       this.pq.on( 'error', (err) => {
 	// this prevents process from exiting and redis
         // will try to reconnect...
-	this.log.warn( err );
+	this.log.warn( err.message );
+      });
+      this.pq.on( 'reconnecting', (o) => {
+        this.log.warn( `redis reconnecting: attempt: ${o.attempt}, delay: ${o.delay}` );
       });
       this.pq.on( 'ready', () => {
 	if ( this.pReadyCalled ) {
@@ -43,7 +51,10 @@ module.exports = function( config ) {
       this.cq.on( 'error', (err) => {
 	// this prevents process from exiting and redis
         // will try to reconnect...
-	this.log.warn( err );
+	this.log.warn( err.message );        
+      });
+      this.cq.on( 'reconnecting', (o) => {
+        this.log.warn( `redis reconnecting: attempt: ${o.attempt}, delay: ${o.delay}` );
       });
       this.cq.on( 'ready', () => {
 
