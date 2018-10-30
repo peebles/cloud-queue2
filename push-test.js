@@ -41,7 +41,9 @@ q.producer.connect( function( err ) {
       q.producer.send( 'peebtest', msg, function( err ) {
 	if ( err ) return cb( err );
 	iter += 1;
-	cb();
+        setTimeout( () => {
+	  cb();
+        }, 500 );
       });
     },
     function( err ) {
