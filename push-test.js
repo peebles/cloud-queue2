@@ -1,6 +1,7 @@
 var async = require( 'async' );
 var config = require( './config' );
 var log = require( 'winston' );
+log.level = 'debug';
 
 function exit( err ) {
   if ( err ) console.trace( err );

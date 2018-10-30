@@ -1,6 +1,7 @@
 var async = require( 'async' );
 var config = require( './config' );
 var log = require( 'winston' );
+log.level = 'debug';
 
 var qType = process.argv[2];
 var qConfig = config[ qType ];
