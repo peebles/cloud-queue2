@@ -101,8 +101,13 @@ module.exports = function( config ) {
       let uuid = shortid.generate(); // create a key to store the message
       this.pq.set( uuid, JSON.stringify( message ), (err) => {
 	if ( err ) return cb( err );
+        if ( this.options.expire ) this.pq.expire( uuid, this.options.expire );
 	// now push the uuid on the queue
-        this.pq.lpush( queue, uuid, cb );
+        this.pq.lpush( queue, uuid, (err, res) => {
+	  if ( err ) return cb( err );
+          if ( this.options.expire ) this.pq.expire( queue, this.options.expire );
+          cb( null, res );
+        });
       });
     }
 
