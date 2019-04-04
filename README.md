@@ -182,7 +182,8 @@ message from the queue.
       "producerConfirm": true,
       "messageTtl": 259200000,
       "expires": 604800000,
-	  "autoDelete": true,
+	  "autoDelete": false,
+      "autoAck": false,
       "qos": { "count": 100, "global": false }
     }
   }
@@ -194,7 +195,11 @@ enqueuing a message.  If set to false, it is more of a fire-and-forget model, bu
 default is 3 days.  `expires` is the number of milliseconds of disuse of a queue before it is deleted by rabbitmq.
 The default is 7 days.  `qos` is used when consuming messages in "push" mode; consumer.connect() with a message handler.
 `qos.count` is the number of messages alowed to be outstanding without being deleted.  `qos.global` when false means
-that `qos.count` is per client, not global and is probably what you want.
+that `qos.count` is per client, not global and is probably what you want.  `autoAck` is used on both "push" and "pull"
+modes, and if set to true, tells the rabbitmq broker to consider messages to be acknowledged as soon as they are sent to
+the consumer.  If false (the default), the consumer must explicity acknowldege (delete) messages.  Setting `autoAck` to
+true can lead to considerably better consumption rates, at the risk of possibly losing some messages due to failues.  
+See [this article](https://www.rabbitmq.com/confirms.html) for details.
 
 `autoDelete` is a different way of managing queue deletion.  It is set to false by default.  If set to true, queues
 will be deleted when the number of consumers drops to zero.

@@ -13,6 +13,7 @@ module.exports = function( config ) {
 
       let defaults = {
 	producerConfirm: true,
+        autoAck: false,
       };
       this.options = Object.assign( {}, defaults, config.options );
       this.assertedQueues = {};
@@ -171,7 +172,7 @@ module.exports = function( config ) {
       this._try( (cb) => {
 	this._assertQueue( this.cch, queue, ( err ) => {
 	  if ( err ) return cb( err );
-          this.cch.get( queue, { noAck: false }, ( err, msg ) => {
+          this.cch.get( queue, { noAck: this.options.autoAck }, ( err, msg ) => {
             if ( err ) return cb( err );
             if ( msg == false ) return setTimeout( () => { return cb( null, [] ); }, this.options.waitTimeSeconds * 1000 );
             cb( null, [{
@@ -184,6 +185,7 @@ module.exports = function( config ) {
     }
 
     _remove( queue, handle, cb ) {
+      if ( this.options.autoAck ) return process.nextTick(cb); // broker is auto-acking, so explicit ack would be an error.
       this._try( (cb) => {
 	try {
           this.cch.ack( handle );
