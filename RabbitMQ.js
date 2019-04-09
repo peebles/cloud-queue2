@@ -17,6 +17,9 @@ module.exports = function( config ) {
       };
       this.options = Object.assign( {}, defaults, config.options );
       this.assertedQueues = {};
+
+      if ( this.options.debug === true )
+        this.log.debug( 'RabbitMQ: CQ2: Client options:', JSON.stringify( this.options, null, 2 ) );
     }
 
     _producer_connect( cb ) {
@@ -126,7 +129,7 @@ module.exports = function( config ) {
 		  if ( err ) this.log.error( err );
 		});
               });
-	    }, {noAck: false }, (err) => {
+	    }, {noAck: this.options.autoAck }, (err) => {
 	      if ( err ) this.log.error( err );
 	    });
 	  });
@@ -137,7 +140,8 @@ module.exports = function( config ) {
     _assertQueue( q, queue, cb ) {
       if ( this.assertedQueues[ queue ] ) return process.nextTick( cb );
       let opts = {
-	durable: true
+	durable: true,
+        noAck: this.options.autoAck,
       };
       [ 'messageTtl', 'expires', 'autoDelete' ].forEach( (param) => {
 	if ( config.options && ( config.options[ param ] != undefined ) )
