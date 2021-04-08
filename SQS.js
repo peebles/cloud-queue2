@@ -70,10 +70,20 @@ module.exports = function( config ) {
 
     }
 
+    _getQueueUrl( connection, queueName, cb ) {
+      connection.getQueueUrl({ QueueName: queueName }, ( err, data ) => {
+        if ( data && data.QueueUrl ) return cb( null, data.QueueUrl );
+        // else try creating a queue
+        connection.createQueue({ QueueName: queueName }, ( err, data ) => {
+          if ( err ) return cb( err );
+          else return cb( null, data.QueueUrl );
+        });
+      })
+    }
+
     _enqueue( queue, message, cb ) {
-      this.pq.createQueue({ QueueName: queue }, ( err, data ) => {
+      this._getQueueUrl( this.pq, queue, ( err, url ) => {
 	if ( err ) return cb( err );
-	let url = data.QueueUrl;
 	this.pq.sendMessage({ QueueUrl: url, MessageBody: JSON.stringify( message ), DelaySeconds: 0 }, ( err ) => {
 	  cb( err );
 	});
@@ -82,9 +92,8 @@ module.exports = function( config ) {
 
     _dequeue( queue, cb ) {
       this._try( (cb) => {
-	this.cq.createQueue({ QueueName: queue }, ( err, data ) => {
+	this._getQueueUrl( this.cq, queue, ( err, url ) => {
 	  if ( err ) return cb( err );
-	  let url = data.QueueUrl;
 	  this.cq.receiveMessage({
 	    QueueUrl: url,
             AttributeNames: this.options.attributes,
@@ -109,9 +118,8 @@ module.exports = function( config ) {
 
     _remove( queue, handle, cb ) {
       this._try( (cb) => {
-	this.cq.createQueue({ QueueName: queue }, ( err, data ) => {
+	this._getQueueUrl( this.cq, queue, ( err, url ) => {
 	  if ( err ) return cb( err );
-	  let url = data.QueueUrl;
 	  this.cq.deleteMessage({ QueueUrl: url, ReceiptHandle: handle}, (err) => {
 	    cb( err );
 	  });
@@ -121,9 +129,8 @@ module.exports = function( config ) {
 
     _consumer_length( queue, cb ) {
       this._try( (cb) => {
-	this.cq.createQueue({ QueueName: queue }, ( err, data ) => {
+	this._getQueueUrl( this.cq, queue, ( err, url ) => {
 	  if ( err ) return cb( err );
-	  let url = data.QueueUrl;
 	  this.cq.getQueueAttributes({ QueueUrl: url, AttributeNames: [ 'ApproximateNumberOfMessages' ] }, (err, data) => {
 	    if ( err ) return cb( err );
 	    if ( data && data.Attributes && data.Attributes.ApproximateNumberOfMessages )
@@ -136,9 +143,8 @@ module.exports = function( config ) {
 
     _consumer_deleteQueue( queue, cb ) {
       this._try( (cb) => {
-	this.cq.createQueue({ QueueName: queue }, ( err, data ) => {
+	this._getQueueUrl( this.cq, queue, ( err, url ) => {
 	  if ( err ) return cb( err );
-	  let url = data.QueueUrl;
 	  this.cq.deleteQueue({ QueueUrl: url }, cb );
 	});
       }, cb );      
